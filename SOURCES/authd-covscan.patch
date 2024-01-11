@@ -1,0 +1,36 @@
+diff --git a/authd.c b/authd.c
+index a2072de..07c6f0d 100644
+--- a/authd.c
++++ b/authd.c
+@@ -539,7 +538,9 @@ static char *get_created_tok_addr(const char *peer_addr_hex) {
+             }
+             // hex addr must have even number of digits
+             if ((int) z & 1) {
+-                errno = EINVAL; return NULL;
++                free(addr);
++                errno = EINVAL;
++                return NULL;
+             }
+             while (z > 1) {
+                 unsigned long ul; char *endptr;
+@@ -548,7 +549,9 @@ static char *get_created_tok_addr(const char *peer_addr_hex) {
+                 addr_hex[z] = '\0'; z -= HEX_DIG;
+                 ul = strtoul(addr_hex + z, &endptr, 16);
+                 if (is_bad_strto(addr_hex + z, endptr)) {
+-                    errno = EINVAL; return NULL;
++                    free(addr); 
++                    errno = EINVAL;
++                    return NULL;
+                 }
+ 	        if ((!IS_IPV4 || 6 == z) && is_16_bits)
+                     *p++ = ':';
+@@ -809,7 +812,7 @@ static bool initialize_crypto(crypto_t *x, const char *filename) {
+         const EVP_MD *const HASH = EVP_md5();   // openssl compat: enc -pass
+         const size_t KEY_SIZE = EVP_CIPHER_key_length(x->cipher);
+         const size_t IV_SIZE = EVP_CIPHER_iv_length(x->cipher);
+-        char *pass = NULL; size_t z = 0;
++        unsigned char *pass = NULL; size_t z = 0;
+ 
+         if (!S_ISREG(file.st_mode)) return false;       // no dirs, devs, etc.
+         if  (file.st_mode & (S_IROTH | S_IWOTH)) return false;  // no ------rw-
+
